@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ trip.title }} — Дневник путешествий{% endblock %}
+
+{% block head %}
+{% if trip.latitude and trip.longitude %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="trip-detail">
+    <!-- Заголовок -->
+    <div class="trip-detail-header">
+        <div class="trip-detail-location">
+            &#128205; {{ trip.country }}, {{ trip.city }}
+        </div>
+        <h1>{{ trip.title }}</h1>
+        <div style="margin-top:0.5rem; font-size:0.9rem; color:var(--text-light);">
+            Автор:
+            <a href="{{ url_for('user_profile', username=trip.username) }}">
+                {{ trip.username }}
+            </a>
+            &nbsp;|&nbsp;
+            <span class="visibility-badge {{ trip.visibility }}">
+                {% if trip.visibility == 'public' %}Публичное{% else %}Приватное{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="trip-detail-body">
+        <!-- Описание -->
+        {% if trip.description %}
+            <div class="trip-detail-description">{{ trip.description }}</div>
+        {% endif %}
+
+        <!-- Информационная сетка -->
+        <div class="trip-info-grid">
+            {% if trip.date_start %}
+                <div class="trip-info-item">
+                    <div class="label">Даты</div>
+                    <div class="value">
+                        {{ trip.date_start|format_date }}
+                        {% if trip.date_end %}&mdash; {{ trip.date_end|format_date }}{% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if trip.total_cost %}
+                <div class="trip-info-item">
+                    <div class="label">Стоимость</div>
+                    <div class="value cost">
+                        {{ '{:,.0f}'.format(trip.total_cost) }} {{ trip.currency|currency_symbol }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if trip.latitude and trip.longitude %}
+                <div class="trip-info-item">
+                    <div class="label">Координаты</div>
+                    <div class="value">
+                        {{ '%.4f'|format(trip.latitude) }}, {{ '%.4f'|format(trip.longitude) }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if trip.rating_convenience %}
+                <div class="trip-info-item">
+                    <div class="label">Удобство</div>
+                    <div class="value stars">{{ trip.rating_convenience|stars }}</div>
+                </div>
+            {% endif %}
+
+            {% if trip.rating_safety %}
+                <div class="trip-info-item">
+                    <div class="label">Безопасность</div>
+                    <div class="value stars">{{ trip.rating_safety|stars }}</div>
+                </div>
+            {% endif %}
+
+            {% if trip.rating_nature %}
+                <div class="trip-info-item">
+                    <div class="label">Природа</div>
+                    <div class="value stars">{{ trip.rating_nature|stars }}</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Карта -->
+    {% if trip.latitude and trip.longitude %}
+        <div class="trip-detail-map">
+            <h3>&#128506; Местоположение на карте</h3>
+            <div id="map" style="height:400px; border-radius:8px;"></div>
+            <script>
+                var map = L.map('map').setView([{{ trip.latitude }}, {{ trip.longitude }}], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(map);
+                L.marker([{{ trip.latitude }}, {{ trip.longitude }}]).addTo(map)
+                    .bindPopup('{{ trip.city }}, {{ trip.country }}').openPopup();
+            </script>
+        </div>
+    {% endif %}
+
+    <!-- Действия -->
+    {% if current_user.is_authenticated and current_user.id == trip.user_id %}
+        <div class="trip-detail-actions">
+            <a href="{{ url_for('trip_edit', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                Редактировать
+            </a>
+            <form method="POST" action="{{ url_for('trip_delete', trip_id=trip.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Вы уверены, что хотите удалить эту запись?');">
+                <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+            </form>
+            <a href="{{ url_for('my_trips') }}" class="btn btn-secondary btn-sm">
+                К моим записям
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div style="margin-top:1.5rem;">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">&larr; Все путешествия</a>
+</div>
+{% endblock %}

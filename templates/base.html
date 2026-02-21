@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Дневник путешествий{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('index') }}" class="navbar-brand">
+                &#127758; Дневник путешествий
+            </a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('index') }}"
+                       {% if request.endpoint == 'index' %}class="active"{% endif %}>
+                    Все путешествия
+                </a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('my_trips') }}"
+                           {% if request.endpoint == 'my_trips' %}class="active"{% endif %}>
+                        Мои записи
+                    </a></li>
+                    <li><a href="{{ url_for('trip_new') }}"
+                           {% if request.endpoint == 'trip_new' %}class="active"{% endif %}>
+                        Новая запись
+                    </a></li>
+                    <li><a href="{{ url_for('user_profile', username=current_user.username) }}">
+                        {{ current_user.username }}
+                    </a></li>
+                    <li><a href="{{ url_for('logout') }}">Выйти</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}"
+                           {% if request.endpoint == 'login' %}class="active"{% endif %}>
+                        Войти
+                    </a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-nav">
+                        Регистрация
+                    </a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Flash-сообщения -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Основное содержимое -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        &copy; {{ now().year if now is defined else '2026' }} Дневник путешествий &mdash; Flask + SQLite + Leaflet.js
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

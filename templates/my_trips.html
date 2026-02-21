@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Мои записи — Дневник путешествий{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Мои записи</h1>
+    <p>Все ваши путешествия в одном месте</p>
+</div>
+
+{% if trips %}
+    <div style="margin-bottom:1.5rem;">
+        <a href="{{ url_for('trip_new') }}" class="btn btn-accent">+ Новая запись</a>
+    </div>
+
+    <div class="trips-grid">
+        {% for trip in trips %}
+            <div class="trip-card">
+                <div class="trip-card-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <div class="trip-card-location">
+                            &#128205; {{ trip.country }}, {{ trip.city }}
+                        </div>
+                        <span class="visibility-badge {{ trip.visibility }}">
+                            {% if trip.visibility == 'public' %}Публичное{% else %}Приватное{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="trip-card-title">
+                        <a href="{{ url_for('trip_detail', trip_id=trip.id) }}">
+                            {{ trip.title }}
+                        </a>
+                    </div>
+                    <div class="trip-card-desc">
+                        {{ trip.description }}
+                    </div>
+                    <div class="trip-card-meta">
+                        {% if trip.date_start %}
+                            <span>&#128197; {{ trip.date_start|format_date }}
+                                {% if trip.date_end %}&mdash; {{ trip.date_end|format_date }}{% endif %}
+                            </span>
+                        {% endif %}
+                        {% if trip.total_cost %}
+                            <span class="trip-card-cost">
+                                {{ '{:,.0f}'.format(trip.total_cost) }} {{ trip.currency|currency_symbol }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="trip-card-footer">
+                    <div style="display:flex; gap:0.5rem;">
+                        <a href="{{ url_for('trip_edit', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                            Редактировать
+                        </a>
+                        <form method="POST" action="{{ url_for('trip_delete', trip_id=trip.id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Вы уверены, что хотите удалить эту запись?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                        </form>
+                    </div>
+                    <a href="{{ url_for('trip_detail', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">
+                        Подробнее
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h3>У вас пока нет записей</h3>
+        <p>Создайте первую запись о своём путешествии!</p>
+        <a href="{{ url_for('trip_new') }}" class="btn btn-accent">Создать запись</a>
+    </div>
+{% endif %}
+{% endblock %}

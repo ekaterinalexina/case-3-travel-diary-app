@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if editing %}Редактирование — {% else %}Новая запись — {% endif %}Дневник путешествий
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if editing %}Редактирование записи{% else %}Новая запись о путешествии{% endif %}</h1>
+</div>
+
+<div class="form-card">
+    <form method="POST"
+          action="{% if editing %}{{ url_for('trip_edit', trip_id=trip.id) }}{% else %}{{ url_for('trip_new') }}{% endif %}">
+
+        <!-- Основная информация -->
+        <div class="form-group">
+            <label for="title">Название путешествия *</label>
+            <input type="text" id="title" name="title"
+                   value="{{ trip.title if trip else '' }}"
+                   placeholder="Например: Романтический Париж" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание</label>
+            <textarea id="description" name="description"
+                      placeholder="Расскажите о своих впечатлениях...">{{ trip.description if trip else '' }}</textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="country">Страна *</label>
+                <input type="text" id="country" name="country"
+                       value="{{ trip.country if trip else '' }}"
+                       placeholder="Например: Франция" required>
+            </div>
+            <div class="form-group">
+                <label for="city">Город *</label>
+                <input type="text" id="city" name="city"
+                       value="{{ trip.city if trip else '' }}"
+                       placeholder="Например: Париж" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="date_start">Дата начала</label>
+                <input type="date" id="date_start" name="date_start"
+                       value="{{ trip.date_start if trip else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="date_end">Дата окончания</label>
+                <input type="date" id="date_end" name="date_end"
+                       value="{{ trip.date_end if trip else '' }}">
+            </div>
+        </div>
+
+        <!-- Геопозиция -->
+        <div class="form-section">
+            <h3>&#128205; Геопозиция</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitude">Широта</label>
+                    <input type="number" id="latitude" name="latitude"
+                           step="0.0001" min="-90" max="90"
+                           value="{{ trip.latitude if trip and trip.latitude else '' }}"
+                           placeholder="Например: 48.8566">
+                    <span class="hint">От -90 до 90</span>
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Долгота</label>
+                    <input type="number" id="longitude" name="longitude"
+                           step="0.0001" min="-180" max="180"
+                           value="{{ trip.longitude if trip and trip.longitude else '' }}"
+                           placeholder="Например: 2.3522">
+                    <span class="hint">От -180 до 180</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Стоимость -->
+        <div class="form-section">
+            <h3>&#128176; Стоимость путешествия</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="total_cost">Общая стоимость</label>
+                    <input type="number" id="total_cost" name="total_cost"
+                           step="0.01" min="0"
+                           value="{{ trip.total_cost if trip and trip.total_cost else '' }}"
+                           placeholder="Например: 2500">
+                </div>
+                <div class="form-group">
+                    <label for="currency">Валюта</label>
+                    <select id="currency" name="currency">
+                        {% set current_currency = trip.currency if trip and trip.currency else 'RUB' %}
+                        <option value="RUB" {% if current_currency == 'RUB' %}selected{% endif %}>&#8381; Рубль (RUB)</option>
+                        <option value="USD" {% if current_currency == 'USD' %}selected{% endif %}>$ Доллар (USD)</option>
+                        <option value="EUR" {% if current_currency == 'EUR' %}selected{% endif %}>&euro; Евро (EUR)</option>
+                        <option value="GBP" {% if current_currency == 'GBP' %}selected{% endif %}>&pound; Фунт (GBP)</option>
+                        <option value="JPY" {% if current_currency == 'JPY' %}selected{% endif %}>&yen; Иена (JPY)</option>
+                        <option value="TRY" {% if current_currency == 'TRY' %}selected{% endif %}>&#8378; Лира (TRY)</option>
+                        <option value="THB" {% if current_currency == 'THB' %}selected{% endif %}>&#3647; Бат (THB)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Оценки -->
+        <div class="form-section">
+            <h3>&#11088; Оценки (от 1 до 5)</h3>
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>Удобство</label>
+                    <div class="rating-group">
+                        {% set conv = (trip.rating_convenience if trip and trip.rating_convenience else 0)|int %}
+                        {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="rating_convenience"
+                                   id="conv_{{ i }}" value="{{ i }}"
+                                   {% if conv == i %}checked{% endif %}>
+                            <label for="conv_{{ i }}" title="{{ i }}">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Безопасность</label>
+                    <div class="rating-group">
+                        {% set safe = (trip.rating_safety if trip and trip.rating_safety else 0)|int %}
+                        {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="rating_safety"
+                                   id="safe_{{ i }}" value="{{ i }}"
+                                   {% if safe == i %}checked{% endif %}>
+                            <label for="safe_{{ i }}" title="{{ i }}">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Природа</label>
+                    <div class="rating-group">
+                        {% set nat = (trip.rating_nature if trip and trip.rating_nature else 0)|int %}
+                        {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="rating_nature"
+                                   id="nat_{{ i }}" value="{{ i }}"
+                                   {% if nat == i %}checked{% endif %}>
+                            <label for="nat_{{ i }}" title="{{ i }}">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Видимость -->
+        <div class="form-section">
+            <div class="form-group">
+                <label for="visibility">Видимость</label>
+                <select id="visibility" name="visibility">
+                    {% set vis = trip.visibility if trip and trip.visibility else 'public' %}
+                    <option value="public" {% if vis == 'public' %}selected{% endif %}>
+                        Публичное — видно всем
+                    </option>
+                    <option value="private" {% if vis == 'private' %}selected{% endif %}>
+                        Приватное — только для меня
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if editing %}Сохранить изменения{% else %}Создать запись{% endif %}
+            </button>
+            <a href="{% if editing %}{{ url_for('trip_detail', trip_id=trip.id) }}{% else %}{{ url_for('my_trips') }}{% endif %}"
+               class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }} — Дневник путешествий{% endblock %}
+
+{% block content %}
+<!-- Заголовок профиля -->
+<div class="profile-header">
+    <div class="profile-avatar">
+        {{ profile_user.username[0]|upper }}
+    </div>
+    <div class="profile-info">
+        <h1>{{ profile_user.username }}</h1>
+        <p>
+            Участник с {{ profile_user.created_at|format_date if profile_user.created_at else 'недавних пор' }}
+            &nbsp;&bull;&nbsp;
+            {{ trips|length }}
+            {% set count = trips|length %}
+            {% if count == 1 %}путешествие
+            {% elif count >= 2 and count <= 4 %}путешествия
+            {% else %}путешествий
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Путешествия пользователя -->
+{% if trips %}
+    <div class="page-header">
+        <h1 style="font-size:1.35rem;">Публичные путешествия</h1>
+    </div>
+
+    <div class="trips-grid">
+        {% for trip in trips %}
+            <div class="trip-card">
+                <div class="trip-card-body">
+                    <div class="trip-card-location">
+                        &#128205; {{ trip.country }}, {{ trip.city }}
+                    </div>
+                    <div class="trip-card-title">
+                        <a href="{{ url_for('trip_detail', trip_id=trip.id) }}">
+                            {{ trip.title }}
+                        </a>
+                    </div>
+                    <div class="trip-card-desc">
+                        {{ trip.description }}
+                    </div>
+                    <div class="trip-card-meta">
+                        {% if trip.date_start %}
+                            <span>&#128197; {{ trip.date_start|format_date }}
+                                {% if trip.date_end %}&mdash; {{ trip.date_end|format_date }}{% endif %}
+                            </span>
+                        {% endif %}
+                        {% if trip.total_cost %}
+                            <span class="trip-card-cost">
+                                {{ '{:,.0f}'.format(trip.total_cost) }} {{ trip.currency|currency_symbol }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="trip-card-footer">
+                    <span class="trip-card-ratings" style="color:var(--accent);">
+                        {% if trip.rating_convenience or trip.rating_safety or trip.rating_nature %}
+                            {{ trip|avg_rating }} &#9733;
+                        {% endif %}
+                    </span>
+                    <a href="{{ url_for('trip_detail', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                        Подробнее
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h3>Пользователь пока не поделился путешествиями</h3>
+        <p>Загляните сюда позже!</p>
+    </div>
+{% endif %}
+{% endblock %}

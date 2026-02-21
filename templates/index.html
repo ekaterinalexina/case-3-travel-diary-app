@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Все путешествия — Дневник путешествий{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Все путешествия</h1>
+    <p>Открывайте мир вместе с другими путешественниками</p>
+</div>
+
+<!-- Фильтры -->
+<form class="filters" method="GET" action="{{ url_for('index') }}">
+    <label for="country">Страна:</label>
+    <select name="country" id="country">
+        <option value="">Все страны</option>
+        {% for c in countries %}
+            <option value="{{ c.country }}"
+                    {% if c.country == current_country %}selected{% endif %}>
+                {{ c.country }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label for="sort">Сортировка:</label>
+    <select name="sort" id="sort">
+        <option value="date_desc" {% if current_sort == 'date_desc' %}selected{% endif %}>
+            По дате (новые)
+        </option>
+        <option value="date_asc" {% if current_sort == 'date_asc' %}selected{% endif %}>
+            По дате (старые)
+        </option>
+        <option value="cost_desc" {% if current_sort == 'cost_desc' %}selected{% endif %}>
+            По стоимости (дорогие)
+        </option>
+        <option value="cost_asc" {% if current_sort == 'cost_asc' %}selected{% endif %}>
+            По стоимости (дешёвые)
+        </option>
+        <option value="rating_desc" {% if current_sort == 'rating_desc' %}selected{% endif %}>
+            По рейтингу
+        </option>
+        <option value="created_desc" {% if current_sort == 'created_desc' %}selected{% endif %}>
+            По дате создания
+        </option>
+    </select>
+
+    <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+    {% if current_country or current_sort != 'date_desc' %}
+        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">Сбросить</a>
+    {% endif %}
+</form>
+
+<!-- Сетка путешествий -->
+{% if trips %}
+    <div class="trips-grid">
+        {% for trip in trips %}
+            <div class="trip-card">
+                <div class="trip-card-body">
+                    <div class="trip-card-location">
+                        &#128205; {{ trip.country }}, {{ trip.city }}
+                    </div>
+                    <div class="trip-card-title">
+                        <a href="{{ url_for('trip_detail', trip_id=trip.id) }}">
+                            {{ trip.title }}
+                        </a>
+                    </div>
+                    <div class="trip-card-desc">
+                        {{ trip.description }}
+                    </div>
+                    <div class="trip-card-meta">
+                        {% if trip.date_start %}
+                            <span>&#128197; {{ trip.date_start|format_date }}
+                                {% if trip.date_end %}&mdash; {{ trip.date_end|format_date }}{% endif %}
+                            </span>
+                        {% endif %}
+                        {% if trip.total_cost %}
+                            <span class="trip-card-cost">
+                                {{ '{:,.0f}'.format(trip.total_cost) }} {{ trip.currency|currency_symbol }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% if trip.rating_convenience or trip.rating_safety or trip.rating_nature %}
+                        <div class="trip-card-meta" style="border-top:none; padding-top:0.25rem;">
+                            <span class="trip-card-ratings" title="Средняя оценка">
+                                {{ trip|avg_rating }} &#9733;
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="trip-card-footer">
+                    <span class="author">
+                        <a href="{{ url_for('user_profile', username=trip.username) }}">
+                            {{ trip.username }}
+                        </a>
+                    </span>
+                    <a href="{{ url_for('trip_detail', trip_id=trip.id) }}" class="btn btn-primary btn-sm">
+                        Подробнее
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h3>Путешествий пока нет</h3>
+        <p>Станьте первым, кто поделится своими впечатлениями!</p>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('trip_new') }}" class="btn btn-accent">Создать запись</a>
+        {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-accent">Зарегистрироваться</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
